@@ -1,3 +1,4 @@
+import datetime
 from DbConnector import DbConnector
 from tabulate import tabulate
 import os
@@ -69,14 +70,34 @@ class ExampleProgram:
         directory_path = './dataset/Data'
         folders = os.listdir(directory_path)
 
-        for folder in folders:
-            if folder in user_label:
+        for user_id in folders:
+            if user_id in user_label:
+
+                # Insert into user
+
                 query = "INSERT INTO User (id, has_labels) VALUES ('%s', TRUE)"
-                activiy_query = "INSERT INTO Activity (id, user_id, transportation_mode, start_date_time, end_date_time) VALUES "
+                self.cursor.execute(query % (user_id))
+
+                # Read every line
+                with open('./dataset/Data/' + user_id + '/labels.txt') as labels:
+                    values = []
+                    labels.readline()
+                    for line in labels:
+                        line = line.strip().split('\t')
+                        start_time = line[0].replace('/', '-')
+                        end_time = line[1].replace('/', '-')
+                        transportation_mode = line[2]
+                        values.append((user_id, transportation_mode, start_time, end_time))
+
+                activity_query = "INSERT INTO Activity (user_id, transportation_mode, start_date_time, end_date_time) VALUES (%s, %s, %s, %s)"
+                self.cursor.executemany(activity_query, values)
+
+                # Insert into TrackPoint
+
             else:
                 query = "INSERT INTO User (id, has_labels) VALUES ('%s', FALSE)"
+                self.cursor.execute(query % (user_id))
  
-            self.cursor.execute(query % (folder))
             self.db_connection.commit()
 
         # if they are in labeled_ids, has_label=True else False
