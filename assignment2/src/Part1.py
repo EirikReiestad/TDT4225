@@ -1,6 +1,6 @@
 from DbConnector import DbConnector
 from tabulate import tabulate
-
+import os
 
 class ExampleProgram:
 
@@ -10,7 +10,9 @@ class ExampleProgram:
         self.cursor = self.connection.cursor
 
     def create_tables(self):
-
+        '''
+        DOCSTRING
+        '''
         # Drop table if already exists
         self.drop_tables()
 
@@ -46,18 +48,36 @@ class ExampleProgram:
                    altitude INTEGER,
                    date_days DOUBLE,
                    date_time DATETIME,
-                   CONSTRAINT FOREIGN KEY (activity_id) REFERENCES Activity(id))
+                    FOREIGN KEY (activity_id) REFERENCES Activity(id))
                 """
         # This adds table_name to the %s variable and executes the query
         self.cursor.execute(query)
         self.db_connection.commit()
     
-    def insert_data(self, table_name):
+    def insert_data(self):
 
         # Insert from labeled_ids.txt the user who has labels
+        user_label = []
+        with open('./dataset/labeled_ids.txt') as labeled_ids:
+
+            for line in labeled_ids:
+                user_label.append(line.strip())
         
         # Loop through all folders
         # Each folder name add as a user
+
+        directory_path = './dataset/Data'
+        folders = os.listdir(directory_path)
+
+        for folder in folders:
+            if folder in user_label:
+                query = "INSERT INTO User (id, has_labels) VALUES ('%s', TRUE)"
+                activiy_query = "INSERT INTO Activity (id, user_id, transportation_mode, start_date_time, end_date_time) VALUES "
+            else:
+                query = "INSERT INTO User (id, has_labels) VALUES ('%s', FALSE)"
+ 
+            self.cursor.execute(query % (folder))
+            self.db_connection.commit()
 
         # if they are in labeled_ids, has_label=True else False
         # also then import labels.txt
@@ -66,11 +86,13 @@ class ExampleProgram:
         # GO into trajectory folder and loop through all files
         # loop through each row of each file add into TrackPoint
 
-        # COlumn, 1 (lat), 2(lon), 4(altitude), 5(datedays), 6+7(here need to merge into format YYYY-MM-DD HH:MM:SS)
+        # Column, 1 (lat), 2(lon), 4(altitude), 5(datedays), 6+7(here need to merge into format YYYY-MM-DD HH:MM:SS)
 
-        # If user has label:
+        # If user has label else skip user with no label:
         # Chek if datetime is within an Activity if yes add FK else add NULL
         # MATCH EXACT TIME in start and end
+        # check plt files name and last row to check if start and end time equals
+        # if equal, then check if plt has less than 2500 if not drop insertin activity
 
         # BULK INSERT INSTEAD (EXAMPLE BELOW)
         # INSERT INTO employees (id, name, age, department)
@@ -80,13 +102,13 @@ class ExampleProgram:
         # (3, 'Tony Stark', 45, 'Finance'),
         # (4, 'Clark Kent', 50, 'Media');
 
-        names = ['Bobby', 'Mc', 'McSmack', 'Board']
-        for name in names:
-            # Take note that the name is wrapped in '' --> '%s' because it is a string,
-            # while an int would be %s etc
-            query = "INSERT INTO %s (name) VALUES ('%s')"
-            self.cursor.execute(query % (table_name, name))
-        self.db_connection.commit()
+        # names = ['Bobby', 'Mc', 'McSmack', 'Board']
+        # for name in names:
+        #     # Take note that the name is wrapped in '' --> '%s' because it is a string,
+        #     # while an int would be %s etc
+        #     query = "INSERT INTO %s (name) VALUES ('%s')"
+        #     self.cursor.execute(query % (table_name, name))
+        # self.db_connection.commit()
 
     def fetch_data(self, table_name):
         query = "SELECT * FROM %s"
@@ -120,7 +142,7 @@ def main():
     try:
         program = ExampleProgram()
         program.create_tables()
-        # Check that the table is dropped
+        program.insert_data()
         program.show_tables()
     except Exception as e:
         print("ERROR: Failed to use database:", e)
