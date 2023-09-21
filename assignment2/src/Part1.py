@@ -93,7 +93,40 @@ class ExampleProgram:
                 self.cursor.executemany(activity_query, values)
 
                 # Insert into TrackPoint
+                trajectory_path = './dataset/Data/' + user_id + '/Trajectory/'
+                files = os.listdir(trajectory_path)
+                
+                for file in files:
+                    with open(trajectory_path + file, 'r') as f:
+                        lines = f.readlines()
 
+                    if len(lines) > 2500 + 6:
+                        continue
+                    
+                    start_time = lines[6].split(',')[5] + ' ' + lines[6].split(',')[6]
+                    end_time = lines[-1].split(',')[5] + ' ' + lines[-1].split(',')[6]
+
+                    activity_id_query = "SELECT id FROM Activity WHERE user_id = %s AND start_date_time = %s AND end_date_time = %s"
+                    self.cursor.execute(activity_id_query, (user_id, start_time, end_time))
+                    activity_id = self.cursor.fetchall()
+                    if not activity_id:
+                        continue
+                    # Fetchone is not used because it may for some reason return multiple ids
+                    activity_id = activity_id[0][0]
+
+                    values = []
+                    # Skip first 6 lines
+                    for line in lines[6:]:
+                        line = line.strip().split(',')
+                        lat = line[0]
+                        lon = line[1]
+                        altitude = line[3]
+                        date_days = line[4]
+                        date_time = line[5] + ' ' + line[6]
+                        values.append((activity_id, lat, lon, altitude, date_days, date_time))
+
+                    trackpoint_query = "INSERT INTO TrackPoint (activity_id, lat, lon, altitude, date_days, date_time) VALUES (%s, %s, %s, %s, %s, %s)"
+                    self.cursor.executemany(trackpoint_query, values)
             else:
                 query = "INSERT INTO User (id, has_labels) VALUES ('%s', FALSE)"
                 self.cursor.execute(query % (user_id))
