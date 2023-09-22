@@ -40,8 +40,8 @@ class Part2:
         query = """SELECT user_id, COUNT(DISTINCT(transportation_mode)) as DifferentTransportation FROM test_db.activity GROUP BY user_id ORDER BY DifferentTransportation DESC LIMIT 10;"""
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
-        print("Top 10 users with most unique transportation modes: ")
-        print(tabulate(rows, headers=self.cursor.column_names))
+
+        return (rows,True)
 
 def main():
     program = None
@@ -50,7 +50,10 @@ def main():
         #program.findMinTrackpoints()
         #program.findAvgTrackpoints()
         #program.findMaxTrackpoints()
-        program.findTop10TransportationsUsers()
+        users, _ = program.findTop10TransportationsUsers()
+
+        users = "".join([f'\n user: {user[0]} \t transportations: {user[1]}' for user in users])
+        print(users)
     except Exception as e:
         print("ERROR: Failed to use database:", e)
     finally:
