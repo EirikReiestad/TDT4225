@@ -165,6 +165,7 @@ class ExampleProgram:
         # self.db_connection.commit()
 
     def fetch_data(self, table_name):
+        """Fetch data"""
         query = "SELECT * FROM %s"
         self.cursor.execute(query % table_name)
         rows = self.cursor.fetchall()
@@ -176,16 +177,19 @@ class ExampleProgram:
         return rows
 
     def drop_table(self, table_name):
+        "Drop table"
         print("Dropping table %s..." % table_name)
         query = "DROP TABLE IF EXISTS %s"
         self.cursor.execute(query % table_name)
 
     def drop_tables(self):
+        "Drop tables"
         self.drop_table("TrackPoint")
         self.drop_table("Activity")
         self.drop_table("User")
 
     def show_tables(self):
+        "Show tables"
         self.cursor.execute("SHOW TABLES")
         rows = self.cursor.fetchall()
         print(tabulate(rows, headers=self.cursor.column_names))
