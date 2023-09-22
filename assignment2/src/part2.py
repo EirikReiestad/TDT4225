@@ -1,87 +1,65 @@
-"""This is the code for Part2"""
-import datetime
 from DbConnector import DbConnector
+from tabulate import tabulate
+
 
 class DbExecutor:
-    """Execute Db instructions"""
     def __init__(self):
         self.connection = DbConnector()
         self.db_connection = self.connection.db_connection
         self.cursor = self.connection.cursor
 
-    def get_table_size(self, table_name: str) -> (int, bool):
-        """
-        Returns
-        number of users: int
-        error: bool
-        """
-        query = "SELECT COUNT(*) FROM %s"
-        self.cursor.execute(query % table_name)
-        result = self.cursor.fetchone()
-        if result is None or len(result) == 0:
-            return (0, False)
-        return (result, True)
+    # 2. Find the average, minimum and maximum number of activities per user.
+    def findMinTrackpoints(self):
+        query = """SELECT MIN(trackpoints) FROM (SELECT COUNT(*) AS trackpoints, user_id FROM TrackPoint INNER JOIN activity ON trackpoint.activity_id = activity.id GROUP BY activity.user_id) AS trackpoints"""
 
-    def get_user_taken_bus(self) -> (list[str], bool):
-        """
-        Return:
-        list of user_id: list[str]
-        error: bool
-        """
-        query = """
-            SELECT DISTINCT user_id 
-            FROM User u
-            INNER JOIN Activity a
-            ON u.id = a.user_id
-            WHERE transportation_mode = 'bus'
-            """
         self.cursor.execute(query)
-        users = self.cursor.fetchall()
-        if users is None or len(users) == 0:
-            return (0, False)
-        return (users, True)
+        rows = self.cursor.fetchall()
+        print("Minimum number of trackpoins: ")
+        print(tabulate(rows, headers=self.cursor.column_names))
 
-    def get_user_activity_over_a_day(self) -> (list[(str, str, datetime.datetime)], bool):
-        """
-        Return:
-        list of (user_id, transportation_mode, duration) 
-        error: bool
-        """
-        query = """
-            SELECT user_id, a.start_date_time, a.end_date_time, transportation_mode
-            FROM User u
-            INNER JOIN Activity a
-            ON u.id = a.user_id
-        """
+    def findAvgTrackpoints(self):
+        query = """SELECT AVG(trackpoints) FROM (SELECT COUNT(*) AS trackpoints FROM TrackPoint INNER JOIN Activity ON Trackpoint.activity_id = Activity.id GROUP BY Activity.user_id) AS trackpoints"""
+
         self.cursor.execute(query)
-        users = self.cursor.fetchall()
-        if users is None or len(users) == 0:
-            return (0, False)
+        rows = self.cursor.fetchall()
+        print("Average number of trackpoins: ")
+        print(tabulate(rows, headers=self.cursor.column_names))
+        return rows
 
-        result = []
-        for user in users:
-            start_day = user[1] + datetime.timedelta(days=1) 
-            end_day = user[2]
+    def findMaxTrackpoints(self):
+        query = """SELECT Max(trackpoints) FROM (SELECT COUNT(*) AS trackpoints, user_id FROM TrackPoint INNER JOIN activity ON trackpoint.activity_id = activity.id GROUP BY activity.user_id) AS trackpoints"""
 
-            if start_day.day == end_day.day:
-                result.append((user[0], user[3], user[2]-user[1]))
-        return (result, True)
-    
-    def get_activity_distance(self):
-        """
-        Return:
-        """
-        query = """
-            SELECT a.transportation_mode 
-            FROM Activity a
-            INNER JOIN TrackPoint tp
-            WHERE 
-        """
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        print("Maximum number of trackpoins: ")
+        print(tabulate(rows, headers=self.cursor.column_names))
+
+    # 5. Find the top 10 users with most unique transportation modes
+    def findTop10TransportationsUsers(self):
+        query = """SELECT user_id, COUNT(DISTINCT(transportation_mode)) as DifferentTransportation FROM test_db.activity GROUP BY user_id ORDER BY DifferentTransportation DESC LIMIT 10;"""
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+
+        return (rows, True)
 
 
-if "__main__" == __name__:
-    connector = DbConnector()
-    executor = DbExecutor()
+def main():
+    program = None
+    try:
+        program = DbExecutor()
+        # program.findMinTrackpoints()
+        # program.findAvgTrackpoints()
+        # program.findMaxTrackpoints()
+        users, _ = program.findTop10TransportationsUsers()
+
+        users = "".join([f'\n user: {user[0]} \t transportations: {user[1]}' for user in users])
+        print(users)
+    except Exception as e:
+        print("ERROR: Failed to use database:", e)
+    finally:
+        if program:
+            program.connection.close_connection()
 
 
-    connector.close_connection()
+if __name__ == "__main__":
+    main()
