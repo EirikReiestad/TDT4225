@@ -1,3 +1,4 @@
+"""This is the DBConnector file"""
 import mysql.connector as mysql
 
 
@@ -14,6 +15,7 @@ class DbConnector:
     PASSWORD = "test123" // The password you set for said user
     """
 
+    #pylint: disable=C0103
     def __init__(self,
                  HOST="tdt4225-35.idi.ntnu.no",
                  DATABASE="assignment2",
@@ -21,9 +23,14 @@ class DbConnector:
                  PASSWORD="common"):
         # Connect to the database
         try:
-            self.db_connection = mysql.connect(host=HOST, database=DATABASE, user=USER, password=PASSWORD, port=3306)
-        except Exception as e:
-            print("ERROR: Failed to connect to db:", e)
+            self.db_connection = mysql.connect(
+                host=HOST,
+                database=DATABASE,
+                user=USER,
+                password=PASSWORD,
+                port=3306)
+        except ConnectionError as error:
+            print("ERROR: Failed to connect to db:", error)
 
         # Get the db cursor
         self.cursor = self.db_connection.cursor()
@@ -36,6 +43,9 @@ class DbConnector:
         print("-----------------------------------------------\n")
 
     def close_connection(self):
+        """
+        Close the connection
+        """
         # close the cursor
         self.cursor.close()
         # close the DB connection

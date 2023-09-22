@@ -1,10 +1,10 @@
-import datetime
-from DbConnector import DbConnector
-from tabulate import tabulate
+"""This is the code for Part1"""
 import os
+from tabulate import tabulate
+from DbConnector import DbConnector
 
 class ExampleProgram:
-
+    """Part 1"""
     def __init__(self):
         self.connection = DbConnector()
         self.db_connection = self.connection.db_connection
