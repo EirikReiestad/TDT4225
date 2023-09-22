@@ -1,4 +1,5 @@
 """This is the code for Part2"""
+import datetime
 from DbConnector import DbConnector
 
 class DbExecutor:
@@ -29,32 +30,58 @@ class DbExecutor:
         """
         query = """
             SELECT DISTINCT user_id 
-            FROM User 
-            INNER JOIN Activity
-            ON user_id
+            FROM User u
+            INNER JOIN Activity a
+            ON u.id = a.user_id
             WHERE transportation_mode = 'bus'
             """
         self.cursor.execute(query)
-        result = self.cursor.fetchall()
-        if result is None or len(result) == 0:
+        users = self.cursor.fetchall()
+        if users is None or len(users) == 0:
             return (0, False)
-        return (result, True)
+        return (users, True)
 
-    def get_user_activity_over_a_day(self) -> (list[str], bool):
+    def get_user_activity_over_a_day(self) -> (list[(str, str, datetime.datetime)], bool):
         """
         Return:
-        list of user_id: list[str] 
+        list of (user_id, transportation_mode, duration) 
         error: bool
         """
         query = """
-            SELECT DISTINCT user_id
-            FROM User
+            SELECT user_id, a.start_date_time, a.end_date_time, transportation_mode
+            FROM User u
             INNER JOIN Activity a
-            ON user_id
+            ON u.id = a.user_id
         """
         self.cursor.execute(query)
-        result = self.cursor.fetchall()
-        if result is None or len(result) == 0:
+        users = self.cursor.fetchall()
+        if users is None or len(users) == 0:
             return (0, False)
+
+        result = []
+        for user in users:
+            start_day = user[1] + datetime.timedelta(days=1) 
+            end_day = user[2]
+
+            if start_day.day == end_day.day:
+                result.append((user[0], user[3], user[2]-user[1]))
         return (result, True)
-        
+    
+    def get_activity_distance(self):
+        """
+        Return:
+        """
+        query = """
+            SELECT a.transportation_mode 
+            FROM Activity a
+            INNER JOIN TrackPoint tp
+            WHERE 
+        """
+
+
+if "__main__" == __name__:
+    connector = DbConnector()
+    executor = DbExecutor()
+
+
+    connector.close_connection()
