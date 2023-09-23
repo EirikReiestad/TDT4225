@@ -133,7 +133,6 @@ class DbExecutor:
 
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
-        print(tabulate(rows, headers=["User ID", "Number of invalid activities"], tablefmt="psql"))
 
         return (rows, True)
 
