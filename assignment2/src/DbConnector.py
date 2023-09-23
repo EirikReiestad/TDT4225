@@ -17,10 +17,15 @@ class DbConnector:
 
     #pylint: disable=C0103
     def __init__(self,
-                 HOST="tdt4225-35.idi.ntnu.no",
-                 DATABASE="assignment2",
-                 USER="common",
-                 PASSWORD="common"):
+                 #HOST="localhost",
+                 #HOST="tdt4225-35.idi.ntnu.no",
+                 #DATABASE="test_db",
+                 #USER="testuser",
+                 #PASSWORD="test123"):
+                HOST = "tdt4225-35.idi.ntnu.no",
+                DATABASE = "assignment2",
+                USER = "common",
+                PASSWORD = "common"):
         # Connect to the database
         try:
             self.db_connection = mysql.connect(
