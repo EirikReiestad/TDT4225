@@ -1,10 +1,10 @@
-import datetime
-from DbConnector import DbConnector
-from tabulate import tabulate
+"""This is the code for Part1"""
 import os
+from tabulate import tabulate
+from DbConnector import DbConnector
 
 class ExampleProgram:
-
+    """Part 1"""
     def __init__(self):
         self.connection = DbConnector()
         self.db_connection = self.connection.db_connection
@@ -165,6 +165,7 @@ class ExampleProgram:
         # self.db_connection.commit()
 
     def fetch_data(self, table_name):
+        """Fetch data"""
         query = "SELECT * FROM %s"
         self.cursor.execute(query % table_name)
         rows = self.cursor.fetchall()
@@ -176,16 +177,19 @@ class ExampleProgram:
         return rows
 
     def drop_table(self, table_name):
+        "Drop table"
         print("Dropping table %s..." % table_name)
         query = "DROP TABLE IF EXISTS %s"
         self.cursor.execute(query % table_name)
 
     def drop_tables(self):
+        "Drop tables"
         self.drop_table("TrackPoint")
         self.drop_table("Activity")
         self.drop_table("User")
 
     def show_tables(self):
+        "Show tables"
         self.cursor.execute("SHOW TABLES")
         rows = self.cursor.fetchall()
         print(tabulate(rows, headers=self.cursor.column_names))
