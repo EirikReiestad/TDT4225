@@ -68,7 +68,8 @@ def main():
         program.drop_table(table_name="Person")
         # Check that the table is dropped
         program.show_tables()
-    except ConnectionError as e:
+    # pylint: disable=W0703
+    except Exception as e:
         print("ERROR: Failed to use database:", e)
     finally:
         if program:
