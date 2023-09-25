@@ -2,6 +2,7 @@
 import mysql.connector as mysql
 
 
+# pylint: disable=R0903
 class DbConnector:
     """
     Connects to the MySQL server on the Ubuntu virtual machine.
@@ -15,20 +16,19 @@ class DbConnector:
     PASSWORD = "test123" // The password you set for said user
     """
 
-    #pylint: disable=C0103
-    def __init__(self,
-                 HOST="tdt4225-35.idi.ntnu.no",
-                 DATABASE="assignment2",
-                 USER="common",
-                 PASSWORD="common"):
+    # pylint: disable=C0103
+    def __init__(
+        self,
+        HOST="tdt4225-35.idi.ntnu.no",
+        DATABASE="assignment2",
+        USER="common",
+        PASSWORD="common",
+    ):
         # Connect to the database
         try:
             self.db_connection = mysql.connect(
-                host=HOST,
-                database=DATABASE,
-                user=USER,
-                password=PASSWORD,
-                port=3306)
+                host=HOST, database=DATABASE, user=USER, password=PASSWORD, port=3306
+            )
         except ConnectionError as error:
             print("ERROR: Failed to connect to db:", error)
 
@@ -51,4 +51,4 @@ class DbConnector:
         # close the DB connection
         self.db_connection.close()
         print("\n-----------------------------------------------")
-        print("Connection to %s is closed" % self.db_connection.get_server_info())
+        print(f"Connection to {self.db_connection.get_server_info()} is closed")
