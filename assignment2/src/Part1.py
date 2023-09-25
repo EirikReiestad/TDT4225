@@ -91,78 +91,52 @@ class ExampleProgram:
 
                 activity_query = "INSERT INTO Activity (user_id, transportation_mode, start_date_time, end_date_time) VALUES (%s, %s, %s, %s)"
                 self.cursor.executemany(activity_query, values)
+            else:
+                query = "INSERT INTO User (id, has_labels) VALUES ('%s', FALSE)"
+                self.cursor.execute(query % (user_id))
 
-                # Insert into TrackPoint
-                trajectory_path = './dataset/Data/' + user_id + '/Trajectory/'
-                files = os.listdir(trajectory_path)
+            # Insert into TrackPoint
+            trajectory_path = './dataset/Data/' + user_id + '/Trajectory/'
+            files = os.listdir(trajectory_path)
                 
-                for file in files:
-                    with open(trajectory_path + file, 'r') as f:
-                        lines = f.readlines()
+            for file in files:
+                with open(trajectory_path + file, 'r', encoding='UTF-8') as f:
+                    lines = f.readlines()
 
-                    if len(lines) > 2500 + 6:
+                if len(lines) > 2500 + 6:
                         continue
                     
-                    start_time = lines[6].split(',')[5] + ' ' + lines[6].split(',')[6]
-                    end_time = lines[-1].split(',')[5] + ' ' + lines[-1].split(',')[6]
+                start_time = lines[6].split(',')[5] + ' ' + lines[6].split(',')[6]
+                end_time = lines[-1].split(',')[5] + ' ' + lines[-1].split(',')[6]
 
-                    activity_id_query = "SELECT id FROM Activity WHERE user_id = %s AND start_date_time = %s AND end_date_time = %s"
+                if user_id in user_label:
+                    activity_id_query = "SELECT id FROM Activity WHERE user_id = %s AND start_date_time = %s AND end_date_time = %s ORDER BY id DESC"
                     self.cursor.execute(activity_id_query, (user_id, start_time, end_time))
                     activity_id = self.cursor.fetchall()
                     if not activity_id:
                         continue
-                    # Fetchone is not used because it may for some reason return multiple ids
+                        # Fetchone is not used because there exists user who has multiple activity at the same time
+                        # We choose to add the trackpoints to the last activity added because for example user can drive the car slowly that might get mistaken in the beginning for walk
                     activity_id = activity_id[0][0]
+                else:
+                    activity_id_query = "INSERT INTO Activity (user_id, transportation_mode, start_date_time, end_date_time) VALUES (%s, %s, %s, %s)"
+                    self.cursor.execute(activity_id_query, (user_id, None, start_time, end_time))
+                    activity_id = self.cursor.lastrowid
 
-                    values = []
+                values = []
                     # Skip first 6 lines
-                    for line in lines[6:]:
-                        line = line.strip().split(',')
-                        lat = line[0]
-                        lon = line[1]
-                        altitude = line[3]
-                        date_days = line[4]
-                        date_time = line[5] + ' ' + line[6]
-                        values.append((activity_id, lat, lon, altitude, date_days, date_time))
+                for line in lines[6:]:
+                    line = line.strip().split(',')
+                    lat = line[0]
+                    lon = line[1]
+                    altitude = line[3]
+                    date_days = line[4]
+                    date_time = line[5] + ' ' + line[6]
+                    values.append((activity_id, lat, lon, altitude, date_days, date_time))
 
-                    trackpoint_query = "INSERT INTO TrackPoint (activity_id, lat, lon, altitude, date_days, date_time) VALUES (%s, %s, %s, %s, %s, %s)"
-                    self.cursor.executemany(trackpoint_query, values)
-            else:
-                query = "INSERT INTO User (id, has_labels) VALUES ('%s', FALSE)"
-                self.cursor.execute(query % (user_id))
- 
+                trackpoint_query = "INSERT INTO TrackPoint (activity_id, lat, lon, altitude, date_days, date_time) VALUES (%s, %s, %s, %s, %s, %s)"
+                self.cursor.executemany(trackpoint_query, values)
             self.db_connection.commit()
-
-        # if they are in labeled_ids, has_label=True else False
-        # also then import labels.txt
-        # loop through all and add to Activity
-
-        # GO into trajectory folder and loop through all files
-        # loop through each row of each file add into TrackPoint
-
-        # Column, 1 (lat), 2(lon), 4(altitude), 5(datedays), 6+7(here need to merge into format YYYY-MM-DD HH:MM:SS)
-
-        # If user has label else skip user with no label:
-        # Chek if datetime is within an Activity if yes add FK else add NULL
-        # MATCH EXACT TIME in start and end
-        # check plt files name and last row to check if start and end time equals
-        # if equal, then check if plt has less than 2500 if not drop insertin activity
-
-        # BULK INSERT INSTEAD (EXAMPLE BELOW)
-        # INSERT INTO employees (id, name, age, department)
-        # VALUES
-        # (1, 'Peter Parker', 19, 'IT'),
-        # (2, 'Bruce Wayne', 29, 'Automobile'),
-        # (3, 'Tony Stark', 45, 'Finance'),
-        # (4, 'Clark Kent', 50, 'Media');
-
-        # names = ['Bobby', 'Mc', 'McSmack', 'Board']
-        # for name in names:
-        #     # Take note that the name is wrapped in '' --> '%s' because it is a string,
-        #     # while an int would be %s etc
-        #     query = "INSERT INTO %s (name) VALUES ('%s')"
-        #     self.cursor.execute(query % (table_name, name))
-        # self.db_connection.commit()
 
     def fetch_data(self, table_name):
         """Fetch data"""
