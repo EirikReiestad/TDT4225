@@ -1,5 +1,4 @@
 """part 2"""
-# pylint: disable=R0801
 import datetime
 import math
 from DbConnector import DbConnector

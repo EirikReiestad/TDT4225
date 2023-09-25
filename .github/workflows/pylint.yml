@@ -24,4 +24,3 @@ jobs:
       - name: Analysing the code with pylint
         run: |
           pylint --rcfile=.pylintrc **/*.py
-          pylint --rcfile=.pylintrc ipynb
