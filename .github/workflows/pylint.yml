@@ -22,6 +22,6 @@ jobs:
           pip install pylint
           pip install -r requirements.txt
       - name: Analysing the code with pylint
-        working-directory: ${{ matrix.directory }}/src
         run: |
-          pylint $(git ls-files '*.py') --rcfile=.pylintrc
+          pylint --rcfile=.pylintrc **/*.py
+          pylint --rcfile=.pylintrc ipynb
