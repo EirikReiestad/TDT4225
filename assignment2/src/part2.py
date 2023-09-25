@@ -148,7 +148,14 @@ class Database:
             List of user_id
         """
         # Task 3: Top 15 users with the highest number of activities
-        # query = "SELECT RANK() OVER (ORDER BY COUNT(*) DESC) AS Ranking, user_id, COUNT(*) as number_of_activities FROM Activity GROUP BY user_id ORDER BY COUNT(*) DESC LIMIT 15"
+        # query = "
+        # SELECT RANK() OVER (
+        #   ORDER BY COUNT(*) DESC) AS Ranking, user_id,
+        #   COUNT(*) as number_of_activities
+        #   FROM Activity
+        #   GROUP BY user_id
+        #   ORDER BY COUNT(*)
+        #   DESC LIMIT 15"
         query = """
         SELECT user_id FROM Activity 
         GROUP BY user_id 
@@ -185,7 +192,11 @@ class Database:
         )
         """
         # Here find the set of information that are inserted multiple time
-        # SELECT user_id, transportation_mode, start_date_time, end_date_time, COUNT(*) AS amount FROM Activity GROUP BY user_id, transportation_mode, start_date_time, end_date_time HAVING COUNT(*) > 1;
+        # SELECT user_id, transportation_mode, start_date_time, end_date_time, 
+        # COUNT(*) AS amount 
+        # FROM Activity 
+        # GROUP BY user_id, transportation_mode, start_date_time, end_date_time 
+        # HAVING COUNT(*) > 1;
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         print("Find activities that are registered multiple times:\n", rows)
@@ -238,7 +249,17 @@ class Database:
         """
         # Task 12: Find all the users who have registered transportation_mode and their most used transportation_mode
         # If transportation_mode has same count then order the transportation mode in alphabetical order
-        query = "SELECT user_id, transportation_mode FROM ( SELECT user_id, transportation_mode, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY COUNT(*) DESC, transportation_mode ASC) AS rownum FROM Activity WHERE transportation_mode IS NOT NULL GROUP BY user_id, transportation_mode) AS activity_grouped WHERE rownum=1 ORDER BY user_id"
+        query = """
+        SELECT user_id, transportation_mode 
+        FROM ( SELECT user_id, transportation_mode, ROW_NUMBER() 
+            OVER (
+                PARTITION BY user_id 
+                ORDER BY COUNT(*) DESC, transportation_mode ASC) 
+            AS rownum FROM Activity 
+            WHERE transportation_mode IS NOT NULL 
+            GROUP BY user_id, transportation_mode) 
+        AS activity_grouped WHERE rownum=1 ORDER BY user_id
+        """
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         print(
