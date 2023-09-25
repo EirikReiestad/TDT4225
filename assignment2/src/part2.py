@@ -1,5 +1,5 @@
 """part 2"""
-
+# pylint: disable=R0801
 import datetime
 import math
 from DbConnector import DbConnector
@@ -81,6 +81,7 @@ class Database:
                 result.append((user[0], user[3], user[2] - user[1]))
         return result
 
+    # pylint: disable=R0914
     def get_activity_distance(self) -> (int, int):
         """
         Get the user_id for user with the longest activity distance for each transportation mode
@@ -192,10 +193,10 @@ class Database:
         )
         """
         # Here find the set of information that are inserted multiple time
-        # SELECT user_id, transportation_mode, start_date_time, end_date_time, 
-        # COUNT(*) AS amount 
-        # FROM Activity 
-        # GROUP BY user_id, transportation_mode, start_date_time, end_date_time 
+        # SELECT user_id, transportation_mode, start_date_time, end_date_time,
+        # COUNT(*) AS amount
+        # FROM Activity
+        # GROUP BY user_id, transportation_mode, start_date_time, end_date_time
         # HAVING COUNT(*) > 1;
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
