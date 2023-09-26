@@ -176,7 +176,7 @@ class ExampleProgram:
         query = "SELECT * FROM %s"
         self.cursor.execute(query % table_name)
         rows = self.cursor.fetchall()
-        print("fData from table {table_name}, raw format:")
+        print(f"Data from table {table_name}, raw format:")
         print(rows)
         # Using tabulate to show the table in a nice way
         print(f"Data from table {table_name}, tabulated:")
