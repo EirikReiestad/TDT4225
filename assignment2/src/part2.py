@@ -1,6 +1,8 @@
 import datetime
 from DbConnector import DbConnector
 from tabulate import tabulate
+import numpy as np
+import time
 
 
 class DbExecutor:
@@ -120,12 +122,63 @@ class DbExecutor:
     # Close is defined as the same space (50 meters) and for the same half minute (30
     # seconds)
     def findCloseUsers(self):
-        query = """Select count(DISTINCT a.user_id) as User1 From Activity a JOIN TrackPoint t1 ON a.id = t1.activity_id JOIN TrackPoint t2 ON a.id = t2.activity_id WHERE t2.lon < t1.lon + 0.0020 AND t2.lat < t1.lat + 0.0020 AND t2.lon > t1.lon - 0.0020 AND t2.lat > t1.lat - 0.0020 AND t1.date_time BETWEEN t2.date_time - INTERVAL 30 SECOND AND t2.date_time + INTERVAL 30 SECOND"""
-        self.cursor.execute(query)
-        rows = self.cursor.fetchall()
-        print(tabulate(rows, headers=["Number of users close to each other in time and space"], tablefmt="psql"))
+        #Finding min,max of lon and lat
+        min_max_lat_lon_query = """SELECT min(lat),max(lat),min(lon),max(lat) 
+            FROM trackpoint"""
 
-        return (rows, True)
+        self.cursor.execute(min_max_lat_lon_query)
+        min_max = self.cursor.fetchall()
+
+        min_lat = min_max[0][0] - 0.1
+        max_lat = min_max[0][1] + 0.1
+        min_lon = min_max[0][2] - 0.1
+        max_lon = min_max[0][3] + 0.1
+
+
+        lat = np.linspace(min_lat,max_lat, 5)
+        lon = np.linspace(min_lon,max_lon, 5)
+
+
+
+        # Divinding trackpoints into smaller areas
+        query = """WITH limitedTrackPoints AS 
+            (SELECT * 
+            FROM trackpoint 
+            WHERE lat > %s 
+            AND lat < %s 
+            AND lon > %s 
+            AND lon < %s)
+            
+            SELECT DISTINCT *
+            FROM Activity a WHERE EXISTS ( 
+            SELECT * FROM limitedTrackPoints t1 WHERE EXISTS(
+                SELECT * FROM limitedTrackPoints t2 WHERE
+                    t2.lon < t1.lon + 0.0040
+                    AND t2.lat < t1.lat + 0.0040
+                    AND t1.date_time BETWEEN t2.date_time - INTERVAL '30' SECOND AND t2.date_time + INTERVAL '30' SECOND
+                    )
+            )GROUP BY a.user_id
+            """
+
+        start = time.time()
+        users = []
+        for i in range(len(lat)-1):
+            for j in range(len(lon)-1):
+                #print(str((lat[i], lat[i + 1], lon[j], lon[j + 1])))
+                self.cursor.execute(query, (lat[i], lat[i + 1], lon[j], lon[j + 1]))
+                rows = self.cursor.fetchall()
+
+                # Checks if there is content in output
+                if len(rows) > 0:
+                    # Adds userid to list
+                    for row in rows:
+                        users.append(row[1])
+        # Removes duplicates
+        users = np.unique(users)
+        end = time.time()
+
+        print(end-start)
+        return (users, True)
 
     # 11. Find all users who have invalid activities, and the number of invalid activities per user
     def findInvalidActivities(self) -> list[(str, int, bool)]:
@@ -144,9 +197,8 @@ def main():
         # program.findMinTrackpoints()
         # program.findAvgTrackpoints()
         # program.findMaxTrackpoints()
-        users, _ = program.findInvalidActivities()
-
-        users = "".join([f'\n user: {user[0]} \t invalid activites: {user[1]}' for user in users])
+        #users, _ = program.findInvalidActivities()
+        users, _ = program.findCloseUsers()
         print(users)
     except Exception as e:
         print("ERROR: Failed to use database:", e)
