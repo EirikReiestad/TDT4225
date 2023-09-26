@@ -48,36 +48,45 @@ class Database:
         users = self.cursor.fetchall()
         return users
 
+    def get_num_user_activity_over_a_day(self) -> int:
+        """
+        Get the number of users who have an activity starting one day, and end the next day
+
+        Return
+        ------
+        int
+            Number of users
+        """
+
+        query = """
+        SELECT COUNT(DISTINCT user_id) 
+        FROM Activity 
+        WHERE DATEDIFF(end_date_time, start_date_time) > 0;
+        """
+        self.cursor.execute(query)
+        result = self.cursor.fetchone()
+        return result
+
     def get_user_activity_over_a_day(
         self,
-    ) -> list[(str, str, datetime.datetime)]:
+    ) -> list[(str, str, datetime.datetime, datetime.datetime)]:
         """
         Get the users who have an activity starting one day, and end the next day
 
         Return
         ------
-        list[(str, str, datetime.datetime)]
+        list[(str, str, datetime.datetime, date_time)]
             List of user_id, transportation_mode, and duration
         """
 
         query = """
-        SELECT user_id, a.start_date_time, a.end_date_time, transportation_mode
-        FROM User u
-        INNER JOIN Activity a
-        ON u.id = a.user_id
+        SELECT user_id, transportation_mode, end_date_time - start_date_time AS duration
+        FROM Activity 
+        WHERE DATEDIFF(end_date_time, start_date_time) > 0
+        AND transportation_mode IS NOT NULL;
         """
         self.cursor.execute(query)
-        users = self.cursor.fetchall()
-        if users is None or len(users) == 0:
-            return (0, False)
-
-        result = []
-        for user in users:
-            start_day = user[1] + datetime.timedelta(days=1)
-            end_day = user[2]
-
-            if start_day.day == end_day.day:
-                result.append((user[0], user[3], user[2] - user[1]))
+        result = self.cursor.fetchall()
         return result
 
     # pylint: disable=R0914
