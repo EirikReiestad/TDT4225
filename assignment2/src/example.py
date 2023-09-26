@@ -1,7 +1,9 @@
+# pylint: disable=R0914, R0915
 from DbConnector import DbConnector
 from tabulate import tabulate
 
 
+# pylint: disable=C0115, C0116, C0209, W0718
 class ExampleProgram:
     def __init__(self):
         self.connection = DbConnector()
@@ -17,6 +19,7 @@ class ExampleProgram:
         self.cursor.execute(query % table_name)
         self.db_connection.commit()
 
+    # pylint: disable=R0914, R0915
     def insert_data(self, table_name):
         names = ["Bobby", "Mc", "McSmack", "Board"]
         for name in names:

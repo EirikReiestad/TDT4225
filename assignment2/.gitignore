@@ -1,5 +1,7 @@
 dataset
 
+src/.env
+
 # Ignore venv
 venv
 __pycache__
