@@ -8,7 +8,6 @@ import os.path
 import glob
 import pandas as pd
 
-
 def read_plt(plt_file: str):
     """
     Read a PLT file into a Pandas dataframe.
