@@ -38,10 +38,8 @@ class Database:
         """
 
         query = """
-        SELECT DISTINCT user_id 
-        FROM User u
-        INNER JOIN Activity a
-        ON u.id = a.user_id
+        SELECT DISTINCT user_id
+        FROM Activity
         WHERE transportation_mode = 'bus'
         """
         self.cursor.execute(query)
