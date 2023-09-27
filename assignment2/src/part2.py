@@ -1,7 +1,7 @@
 """part 2"""
 import datetime
-import math
 from DbConnector import DbConnector
+from haversine import haversine, Unit
 
 
 class Database:
@@ -95,24 +95,21 @@ class Database:
         return result
 
     # pylint: disable=R0914
-    def get_activity_distance(self) -> (int, int):
+    def get_user_with_max_distance(self) -> (int, int, int):
         """
         Get the user_id for user with the longest activity distance for each transportation mode
 
         Return
         ------
-        (int, int)
-            user_id and transportation_mode
+        (int, int, int)
+            user_id, transportation_mode, distance
         """
-        # First, get the longest distance
-        # This is porly written and should be revised
         query = """
-        SELECT a.id, tp.lat, tp.lon, a.transportation_mode, u.id
+        SELECT a.id, tp.lat, tp.lon, a.transportation_mode, a.user_id
         FROM Activity a
         INNER JOIN TrackPoint tp ON a.id = tp.activity_id 
-        INNER JOIN User u ON u.id = a.user_id
-        WHERE tp.date_time >= a.start_date_time
-        AND tp.date_time <= a.end_date_time
+        WHERE (TIMESTAMPDIFF(SECOND, a.start_date_time, a.end_date_time)) < 60 * 60 * 24
+        AND a.transportation_mode IS NOT NULL;
         """
 
         self.cursor.execute(query)
@@ -125,12 +122,10 @@ class Database:
 
         for res in result:
             activity_id = res[0]
-            lat = res[1]
-            lon = res[2]
-
-            last_lat, last_lon = last_activity_position.get(activity_id, (lat, lon))
-            last_activity_position[activity_id] = (lat, lon)
-            distance = math.sqrt((lat - last_lat) ** 2 + (lon - last_lon) ** 2)
+            current_position = (res[1], res[2])
+            last_position = last_activity_position.get(activity_id, current_position)
+            last_activity_position[activity_id] = current_position
+            distance = haversine(current_position, last_position, unit=Unit.KILOMETERS)
             activity[activity_id] = activity.get(activity_id, 0) + distance
             transportation[activity_id] = res[3]
             activity_user[activity_id] = res[4]
@@ -148,7 +143,8 @@ class Database:
             activity_id = longest[1][0]
             transportation_mode = longest[0]
             user_id = activity_user[activity_id]
-            result.append((user_id, transportation_mode))
+            distance = activity[activity_id]
+            result.append((user_id, transportation_mode, distance))
 
         return result
 
