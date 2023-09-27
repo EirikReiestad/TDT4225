@@ -72,6 +72,8 @@ class Database:
     ) -> list[(str, str, datetime.datetime, datetime.datetime)]:
         """
         Get the users who have an activity starting one day, and end the next day
+        Source of inspiration: https://stackoverflow.com/questions/6929328/t-sql-duration-in-hoursminutesseconds
+            To get the proper duration format
 
         Return
         ------
@@ -80,7 +82,10 @@ class Database:
         """
 
         query = """
-        SELECT user_id, transportation_mode, end_date_time - start_date_time AS duration
+        SELECT 
+            user_id, 
+            transportation_mode, 
+            SEC_TO_TIME(TIMESTAMPDIFF(SECOND, start_date_time, end_date_time))
         FROM Activity 
         WHERE DATEDIFF(end_date_time, start_date_time) > 0
         AND transportation_mode IS NOT NULL;

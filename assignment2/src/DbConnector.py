@@ -29,12 +29,14 @@ class DbConnector:
             self.db_connection = mysql.connect(
                 host=HOST, database=DATABASE, user=USER, password=PASSWORD, port=3306
             )
-        except ConnectionError as error:
+        # pylint: disable=W0703
+        except Exception as error:
             print("ERROR: Failed to connect to db:", error)
 
         # Get the db cursor
         self.cursor = self.db_connection.cursor()
 
+        print("Using user: ", self.db_connection.user)
         print("Connected to:", self.db_connection.get_server_info())
         # get database information
         self.cursor.execute("select database();")
