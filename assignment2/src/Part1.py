@@ -95,7 +95,7 @@ class ExampleProgram:
                 # Insert into TrackPoint
                 trajectory_path = './dataset/Data/' + user_id + '/Trajectory/'
                 files = os.listdir(trajectory_path)
-                
+                valuesWithoutLabels = []
                 for file in files:
                     with open(trajectory_path + file, 'r') as f:
                         lines = f.readlines()
@@ -151,7 +151,7 @@ class ExampleProgram:
                     end_time = lines[-1].split(',')[5] + ' ' + lines[-1].split(',')[6]
                     # Create activity id
                     activity_query = "INSERT INTO Activity (user_id, transportation_mode, start_date_time, end_date_time) VALUES (%s, %s, %s, %s)"
-                    self.cursor.executemany(activity_query, (user_id, None,start_time,end_time))
+                    self.cursor.execute(activity_query, (user_id, None,start_time,end_time))
 
                     activity_id_query = "SELECT id FROM Activity WHERE user_id = %s AND start_date_time = %s AND end_date_time = %s"
                     self.cursor.execute(activity_id_query, (user_id, start_time, end_time))
