@@ -23,12 +23,10 @@ class ExampleProgram:
             id VARCHAR(255) NOT NULL PRIMARY KEY,
             has_labels BOOLEAN
         )"""
-        # This adds table_name to the %s variable and executes the query
         self.cursor.execute(query)
         self.db_connection.commit()
 
         # CREATE ACTIVITY TABLE
-
         query = """
         CREATE TABLE IF NOT EXISTS Activity (
             id INTEGER AUTO_INCREMENT PRIMARY KEY,
@@ -38,7 +36,6 @@ class ExampleProgram:
             end_date_time DATETIME,
             FOREIGN KEY (user_id) REFERENCES User(id)
         )"""
-        # This adds table_name to the %s variable and executes the query
         self.cursor.execute(query)
         self.db_connection.commit()
 
@@ -53,7 +50,6 @@ class ExampleProgram:
             date_time DATETIME,
         FOREIGN KEY (activity_id) REFERENCES Activity(id))
         """
-        # This adds table_name to the %s variable and executes the query
         self.cursor.execute(query)
         self.db_connection.commit()
 

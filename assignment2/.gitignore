@@ -1,6 +1,7 @@
 dataset
+Data
 
-src/.env
+.env
 
 # Ignore venv
 venv
