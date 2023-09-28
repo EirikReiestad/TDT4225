@@ -54,7 +54,7 @@ class ExampleProgram:
         self.cursor.execute(query)
         self.db_connection.commit()
 
-    # pylint: disable=R0914, R0915
+    # pylint: disable=R0914, R0915, R0912
     def insert_data(self):
         """Clean and insert data into table"""
         # Read from labeled_ids.txt the user who has labels
