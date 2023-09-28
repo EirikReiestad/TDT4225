@@ -94,29 +94,31 @@ class DbExecutor:
 
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
-        return rows
+        print(tabulate(rows, headers=self.cursor.column_names))
 
     def findAvgTrackpoints(self) -> list[(str, float, bool)]:
         query = """Select user_id, AVG(trackpoints) FROM (SELECT Activity.user_id , count(t.id) AS trackpoints FROM TrackPoint t INNER JOIN Activity ON t.activity_id = Activity.id GROUP BY Activity.id) as Trackpoints GROUP BY user_id"""
 
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
-        return rows
+        print(tabulate(rows, headers=self.cursor.column_names))
+
 
     def findMaxTrackpoints(self) -> list[(str, int, bool)]:
         query = """Select user_id, MAX(trackpoints) FROM (SELECT Activity.user_id , count(t.id) AS trackpoints FROM TrackPoint t INNER JOIN Activity ON t.activity_id = Activity.id GROUP BY Activity.id) as Trackpoints GROUP BY user_id"""
 
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
-        return rows
+        print(tabulate(rows, headers=self.cursor.column_names))
+
 
     # 5. Find the top 10 users with most unique transportation modes
     def findTop10TransportationsUsers(self):
         query = """SELECT user_id, COUNT(DISTINCT(transportation_mode)) as DifferentTransportation FROM Activity GROUP BY user_id ORDER BY DifferentTransportation DESC LIMIT 10;"""
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
+        print(tabulate(rows, headers=self.cursor.column_names))
 
-        return (rows, True)
 
     # 8. Find the number of users which have been close to each other in time and space.
     # Close is defined as the same space (50 meters) and for the same half minute (30
@@ -160,7 +162,7 @@ class DbExecutor:
             )GROUP BY a.user_id
             """
 
-        start = time.time()
+
         users = []
         for i in range(len(lat)-1):
             for j in range(len(lon)-1):
@@ -175,10 +177,11 @@ class DbExecutor:
                         users.append(row[1])
         # Removes duplicates
         users = np.unique(users)
-        end = time.time()
 
-        print(end-start)
-        return (users, True)
+        # Build a table
+        table = [[user] for user in users]
+        print(tabulate(table, headers=["Users"]))
+
 
     # 11. Find all users who have invalid activities, and the number of invalid activities per user
     def findInvalidActivities(self) -> list[(str, int, bool)]:
@@ -186,8 +189,7 @@ class DbExecutor:
 
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
-
-        return (rows, True)
+        print(tabulate(rows, headers=self.cursor.column_names))
 
 
 def main():
@@ -198,8 +200,8 @@ def main():
         # program.findAvgTrackpoints()
         # program.findMaxTrackpoints()
         #users, _ = program.findInvalidActivities()
-        users, _ = program.findCloseUsers()
-        print(users)
+        program.findCloseUsers()
+
     except Exception as e:
         print("ERROR: Failed to use database:", e)
     finally:
