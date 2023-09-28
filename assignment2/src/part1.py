@@ -113,12 +113,6 @@ class ExampleProgram:
                 with open(trajectory_path + file, "r", encoding="UTF-8") as f:
                     lines = f.readlines()
 
-                if len(lines) > 2500 + 6:
-                    continue
-
-                start_time = lines[6].split(",")[5] + " " + lines[6].split(",")[6]
-                end_time = lines[-1].split(",")[5] + " " + lines[-1].split(",")[6]
-
                 if user_id in user_label:
                     activity_id_query = """
                     SELECT id FROM Activity 
@@ -133,9 +127,20 @@ class ExampleProgram:
                     activity_id = self.cursor.fetchall()
                     if not activity_id:
                         continue
-                        # Fetchone is not used because there exists user who has multiple activity at the same time
-                        # We choose to add the trackpoints to the last activity added because for example user
-                        # can drive the car slowly that might get mistaken in the beginning for walk
+
+                if len(lines) > 2500 + 6:
+                    if user_id in user_label:
+                        activity_drop_query = """
+                        DELETE FROM Activity WHERE id IN (%s)
+                        """
+                        self.cursor.execute(
+                            activity_drop_query, ([i[0] for i in activity_id])
+                        )
+                    continue
+
+                start_time = lines[6].split(",")[5] + " " + lines[6].split(",")[6]
+                end_time = lines[-1].split(",")[5] + " " + lines[-1].split(",")[6]
+                if user_id in user_label:
                     activity_id = activity_id[0][0]
                 else:
                     activity_id_query = """
