@@ -1,5 +1,5 @@
 """part 2"""
-import datetime
+from datetime import datetime
 from DbConnector import DbConnector
 from haversine import haversine, Unit
 
@@ -67,7 +67,7 @@ class Database:
 
     def get_user_activity_over_a_day(
         self,
-    ) -> list[(str, str, datetime.datetime, datetime.datetime)]:
+    ) -> list[(str, str, datetime)]:
         """
         Get the users who have an activity starting one day, and end the next day
         Source of inspiration: https://stackoverflow.com/questions/6929328/t-sql-duration-in-hoursminutesseconds
@@ -75,7 +75,7 @@ class Database:
 
         Return
         ------
-        list[(str, str, datetime.datetime, date_time)]
+        list[(str, str, datetime)]
             List of user_id, transportation_mode, and duration
         """
 
