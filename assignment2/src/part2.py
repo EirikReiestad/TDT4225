@@ -298,7 +298,7 @@ class Database:
         return rows, self.cursor.column_names
 
     def find_avg_trackpoints(self) -> list[(str, float, bool)]:
-                '''
+        '''
         Find average trackpoints per user
         '''
         query = """SELECT User.id, COALESCE(average, 0) AS average 
