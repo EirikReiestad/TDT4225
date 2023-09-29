@@ -394,11 +394,15 @@ class Database:
         users = np.unique(users)
 
         # Build a table
-        table = [[user] for user in users]
         return users, self.cursor.column_names
     
     def find_invalid_activities(self) -> list[(str, int, bool)]:
-        query = """SELECT a.user_id, count(*) FROM Activity a JOIN TrackPoint t1 on a.id = t1.activity_id JOIN TrackPoint t2 on t1.id = t2.id-1 AND t1.activity_id = t2.activity_id WHERE t2.date_time > t1.date_time + INTERVAL 5 MINUTE GROUP BY a.user_id"""
+        '''
+        Find activities that are invalid
+        '''
+        query = """SELECT a.user_id, count(*) FROM Activity a JOIN TrackPoint t1 on a.id = t1.activity_id 
+        JOIN TrackPoint t2 on t1.id = t2.id-1 AND t1.activity_id = t2.activity_id 
+        WHERE t2.date_time > t1.date_time + INTERVAL 5 MINUTE GROUP BY a.user_id"""
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         return rows, self.cursor.column_names
