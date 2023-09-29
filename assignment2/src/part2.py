@@ -281,6 +281,9 @@ class Database:
     
     # 2. Find the average, minimum and maximum number of activities per user.
     def find_min_trackpoints(self) -> list[(str, int, bool)]:
+        '''
+        Find minimum trackpoints per user
+        '''
         query = """
             SELECT User.id, COALESCE(minimum, 0) AS minimum FROM User LEFT JOIN (SELECT user_id, MIN(trackpoints) AS minimum
             FROM (SELECT Activity.user_id , COUNT(t.id) AS trackpoints 
@@ -295,27 +298,49 @@ class Database:
         return rows, self.cursor.column_names
 
     def find_avg_trackpoints(self) -> list[(str, float, bool)]:
-        query = """SELECT User.id, COALESCE(average, 0) AS average FROM User LEFT JOIN (SELECT user_id, AVG(trackpoints) average FROM (SELECT Activity.user_id , COUNT(t.id) AS trackpoints FROM TrackPoint t JOIN Activity ON t.activity_id = Activity.id JOIN User ON Activity.user_id = User.id GROUP BY Activity.id) AS Trackpoints GROUP BY user_id) a ON a.user_id = User.id"""
+                '''
+        Find average trackpoints per user
+        '''
+        query = """SELECT User.id, COALESCE(average, 0) AS average 
+                FROM User LEFT JOIN (SELECT user_id, AVG(trackpoints) average 
+                FROM (SELECT Activity.user_id , COUNT(t.id) AS trackpoints 
+                FROM TrackPoint t JOIN Activity ON t.activity_id = Activity.id 
+                JOIN User ON Activity.user_id = User.id GROUP BY Activity.id) 
+                AS Trackpoints GROUP BY user_id) a ON a.user_id = User.id"""
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         return rows, self.cursor.column_names
 
     def find_max_trackpoints(self) -> list[(str, int, bool)]:
-        query = """SELECT User.id, COALESCE(maximum, 0) AS maximum FROM User LEFT JOIN (SELECT user_id, MAX(trackpoints) AS maximum FROM (SELECT Activity.user_id , COUNT(t.id) AS trackpoints FROM TrackPoint t INNER JOIN Activity ON t.activity_id = Activity.id GROUP BY Activity.id) AS Trackpoints GROUP BY user_id) a ON a.user_id = User.id"""
+        '''
+        Find maximum trackpoints per user
+        '''
+        query = """SELECT User.id, COALESCE(maximum, 0) AS maximum 
+                FROM User LEFT JOIN (SELECT user_id, MAX(trackpoints) AS maximum 
+                FROM (SELECT Activity.user_id , COUNT(t.id) AS trackpoints FROM TrackPoint t 
+                INNER JOIN Activity ON t.activity_id = Activity.id GROUP BY Activity.id) 
+                AS Trackpoints GROUP BY user_id) a ON a.user_id = User.id"""
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         return rows, self.cursor.column_names
     
-    # 5. Find the top 10 users with most unique transportation modes
     def find_top10_transportations_users(self):
-        query = """SELECT user_id, COUNT(DISTINCT(transportation_mode)) as DifferentTransportation FROM Activity GROUP BY user_id ORDER BY DifferentTransportation DESC LIMIT 10;"""
+        """
+        5. Find the top 10 users with most unique transportation modes
+        """
+        query = """SELECT user_id, COUNT(DISTINCT(transportation_mode)) as DifferentTransportation 
+                    FROM Activity GROUP BY user_id ORDER BY DifferentTransportation DESC LIMIT 10;"""
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
         return rows, self.cursor.column_names
 
     def find_close_users(self):
+        '''
+        Finding users who have been close to each other based on
+        - time and space
+        '''
         #Finding min,max of lon and lat
-        min_max_lat_lon_query = """SELECT MIN(lat), MAX(lat), MIN(lon), MAX(lat) 
+        min_max_lat_lon_query = """SELECT MIN(lat), MAX(lat), MIN(lon), MAX(lat)
                 FROM trackpoint"""
 
         self.cursor.execute(min_max_lat_lon_query)
