@@ -2,6 +2,7 @@
 from datetime import datetime
 from DbConnector import DbConnector
 from haversine import haversine, Unit
+import numpy as np
 
 
 class Database:
@@ -44,7 +45,8 @@ class Database:
         """
         self.cursor.execute(query)
         users = self.cursor.fetchall()
-        return users
+        columns = self.cursor.column_names
+        return users, columns
 
     def get_num_user_activity_over_a_day(self) -> int:
         """
@@ -83,14 +85,15 @@ class Database:
         SELECT 
             user_id, 
             transportation_mode, 
-            SEC_TO_TIME(TIMESTAMPDIFF(SECOND, start_date_time, end_date_time))
+            SEC_TO_TIME(TIMESTAMPDIFF(SECOND, start_date_time, end_date_time)) as duration
         FROM Activity 
         WHERE DATEDIFF(end_date_time, start_date_time) > 0
         AND transportation_mode IS NOT NULL;
         """
         self.cursor.execute(query)
         result = self.cursor.fetchall()
-        return result
+        columns = self.cursor.column_names
+        return result, columns
 
     # pylint: disable=R0914
     def get_user_with_max_distance(self) -> (int, int, int):
@@ -275,6 +278,105 @@ class Database:
         )
         for i in rows:
             print(f"User: {i[0]}, Transportation Mode: {i[1]}")
+    
+    # 2. Find the average, minimum and maximum number of activities per user.
+    def find_min_trackpoints(self) -> list[(str, int, bool)]:
+        query = """
+            SELECT User.id, COALESCE(minimum, 0) AS minimum FROM User LEFT JOIN (SELECT user_id, MIN(trackpoints) AS minimum
+            FROM (SELECT Activity.user_id , COUNT(t.id) AS trackpoints 
+            FROM TrackPoint t
+            INNER JOIN Activity ON t.activity_id = Activity.id 
+            GROUP BY Activity.id) 
+            AS Trackpoints 
+            GROUP BY user_id) a ON a.user_id = User.id
+            """
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        return rows, self.cursor.column_names
+
+    def find_avg_trackpoints(self) -> list[(str, float, bool)]:
+        query = """SELECT User.id, COALESCE(average, 0) AS average FROM User LEFT JOIN (SELECT user_id, AVG(trackpoints) average FROM (SELECT Activity.user_id , COUNT(t.id) AS trackpoints FROM TrackPoint t JOIN Activity ON t.activity_id = Activity.id JOIN User ON Activity.user_id = User.id GROUP BY Activity.id) AS Trackpoints GROUP BY user_id) a ON a.user_id = User.id"""
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        return rows, self.cursor.column_names
+
+    def find_max_trackpoints(self) -> list[(str, int, bool)]:
+        query = """SELECT User.id, COALESCE(maximum, 0) AS maximum FROM User LEFT JOIN (SELECT user_id, MAX(trackpoints) AS maximum FROM (SELECT Activity.user_id , COUNT(t.id) AS trackpoints FROM TrackPoint t INNER JOIN Activity ON t.activity_id = Activity.id GROUP BY Activity.id) AS Trackpoints GROUP BY user_id) a ON a.user_id = User.id"""
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        return rows, self.cursor.column_names
+    
+    # 5. Find the top 10 users with most unique transportation modes
+    def find_top10_transportations_users(self):
+        query = """SELECT user_id, COUNT(DISTINCT(transportation_mode)) as DifferentTransportation FROM Activity GROUP BY user_id ORDER BY DifferentTransportation DESC LIMIT 10;"""
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        return rows, self.cursor.column_names
+
+    def find_close_users(self):
+        #Finding min,max of lon and lat
+        min_max_lat_lon_query = """SELECT min(lat),max(lat),min(lon),max(lat) 
+                FROM trackpoint"""
+
+        self.cursor.execute(min_max_lat_lon_query)
+        min_max = self.cursor.fetchall()
+
+        min_lat = min_max[0][0] - 0.1
+        max_lat = min_max[0][1] + 0.1
+        min_lon = min_max[0][2] - 0.1
+        max_lon = min_max[0][3] + 0.1
+
+
+        lat = np.linspace(min_lat,max_lat, 5)
+        lon = np.linspace(min_lon,max_lon, 5)
+
+
+
+            # Divinding trackpoints into smaller areas
+        query = """WITH limitedTrackPoints AS 
+                (SELECT * 
+                FROM trackpoint 
+                WHERE lat > %s 
+                AND lat < %s 
+                AND lon > %s 
+                AND lon < %s)
+                
+                SELECT DISTINCT *
+                FROM Activity a WHERE EXISTS ( 
+                SELECT * FROM limitedTrackPoints t1 WHERE EXISTS(
+                    SELECT * FROM limitedTrackPoints t2 WHERE
+                        t2.lon < t1.lon + 0.0040
+                        AND t2.lat < t1.lat + 0.0040
+                        AND t1.date_time BETWEEN t2.date_time - INTERVAL '30' SECOND AND t2.date_time + INTERVAL '30' SECOND
+                        )
+                )GROUP BY a.user_id
+                """
+
+
+        users = []
+        for i in range(len(lat)-1):
+            for j in range(len(lon)-1):
+                #print(str((lat[i], lat[i + 1], lon[j], lon[j + 1])))
+                self.cursor.execute(query, (lat[i], lat[i + 1], lon[j], lon[j + 1]))
+                rows = self.cursor.fetchall()
+
+                    # Checks if there is content in output
+                if len(rows) > 0:
+                    # Adds userid to list
+                    for row in rows:
+                        users.append(row[1])
+            # Removes duplicates
+        users = np.unique(users)
+
+        # Build a table
+        table = [[user] for user in users]
+        return users, self.cursor.column_names
+    
+    def find_invalid_activities(self) -> list[(str, int, bool)]:
+        query = """SELECT a.user_id, count(*) FROM Activity a JOIN TrackPoint t1 on a.id = t1.activity_id JOIN TrackPoint t2 on t1.id = t2.id-1 AND t1.activity_id = t2.activity_id WHERE t2.date_time > t1.date_time + INTERVAL 5 MINUTE GROUP BY a.user_id"""
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        return rows, self.cursor.column_names
 
 
 if __name__ == "__main__":
