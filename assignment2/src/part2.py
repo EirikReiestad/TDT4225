@@ -315,7 +315,7 @@ class Database:
 
     def find_close_users(self):
         #Finding min,max of lon and lat
-        min_max_lat_lon_query = """SELECT min(lat),max(lat),min(lon),max(lat) 
+        min_max_lat_lon_query = """SELECT MIN(lat), MAX(lat), MIN(lon), MAX(lat) 
                 FROM trackpoint"""
 
         self.cursor.execute(min_max_lat_lon_query)
