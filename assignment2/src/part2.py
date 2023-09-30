@@ -328,7 +328,9 @@ class Database:
         """
         5. Find the top 10 users with most unique transportation modes
         """
-        query = """SELECT user_id, COUNT(DISTINCT(transportation_mode)) as DifferentTransportation 
+        query = """SELECT  RANK() OVER (
+        ORDER BY COUNT(DISTINCT(transportation_mode)) DESC
+        ) AS Top, user_id, COUNT(DISTINCT(transportation_mode)) as DifferentTransportation 
                     FROM Activity GROUP BY user_id ORDER BY DifferentTransportation DESC LIMIT 10;"""
         self.cursor.execute(query)
         rows = self.cursor.fetchall()
