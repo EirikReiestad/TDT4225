@@ -23,10 +23,6 @@ class DbConnector:
         DATABASE="assignment2",
         USER="common",
         PASSWORD="common",
-        # HOST="localhost",
-        # DATABASE="assignment2",
-        # USER="root",
-        # PASSWORD="banhmi",
     ):
         # Connect to the database
         try:
@@ -35,7 +31,8 @@ class DbConnector:
             )
         # pylint: disable=W0703
         except Exception as error:
-            print("ERROR: Failed to connect to db:", error)
+            print("ERROR: Failed to connect to db")
+            raise error
 
         # Get the db cursor
         self.cursor = self.db_connection.cursor()
