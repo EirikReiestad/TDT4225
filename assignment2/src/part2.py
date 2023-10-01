@@ -212,6 +212,66 @@ class Database:
         rows = self.cursor.fetchall()
         print("Find activities that are registered multiple times:\n", rows)
 
+    def findCloseUsers(self):
+
+        # Using the formula to convert from lat/lon to meters
+        # https://sciencing.com/convert-distances-degrees-meters-7858322.html
+        # L = (2*pi*r*A)/360 Where L is the length, r is the radius of the earth, and A is the angle in degrees.
+        # Came up with 0.00045 as the distance in lat/lon that is 50 meters
+
+        # Sorting the trackpoints by date_time to make it fast to find the datepoints within 30 seconds
+        query = """SELECT a.user_id, date_time, lat,lon FROM trackpoint t
+                INNER JOIN activity a
+                ON a.id = t.activity_id
+                ORDER BY date_time ASC"""
+
+        # Looping through all the squares
+        users = []
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+
+        for i in range(len(rows) - 1):
+            for j in range(i, len(rows)):
+                # Skip the rest of the loop if the time difference is more than 30 seconds and they are sorted
+                if rows[j][1] - rows[i][1] > datetime.timedelta(seconds=30):
+                    break
+                # Dont do anything if the same user
+                if rows[i][0] == rows[j][0]:
+                    continue
+                # Checking if the trackpoints are within 30 seconds of each other
+                if rows[j][1] - rows[i][1] <= datetime.timedelta(seconds=30):
+
+                    # Checking if the trackpoints are within 50 meters of each other
+                    if (rows[i][2] - rows[j][2]) ** 2 + (rows[i][3] - rows[j][3]) ** 2 < 0.00045 ** 2:
+                        # Adding the users to the list
+                        users.append(rows[i][0])
+                        users.append(rows[j][0])
+
+        # Removes duplicates
+        users = np.unique(users)
+
+        print(f"{len(users)} have been close to each other in time and space")
+        len_users = [len(users), ]
+
+    # 11. Find all users who have invalid activities, and the number of invalid activities per user
+
+
+def findInvalidActivities(self):
+    query = """SELECT a.user_id, count(*) 
+                    FROM Activity a 
+                    JOIN TrackPoint t1 
+                    ON a.id = t1.activity_id 
+                    JOIN TrackPoint t2 
+                    ON t1.id = t2.id-1 
+                    AND t1.activity_id = t2.activity_id 
+                    WHERE t2.date_time > t1.date_time + INTERVAL 5 MINUTE
+                    AND t1.id != t2.id 
+                    GROUP BY a.user_id 
+                    ORDER BY a.user_id ASC"""
+
+    self.cursor.execute(query)
+    rows = self.cursor.fetchall()
+
     def get_user_most_altitude(self) -> list[str]:
         """
         Get the user who has gained the most altitude
