@@ -252,25 +252,29 @@ class Database:
 
         print(f"{len(users)} have been close to each other in time and space")
         len_users = [len(users), ]
+        return len_users
 
     # 11. Find all users who have invalid activities, and the number of invalid activities per user
 
+    def findInvalidActivities(self):
+        '''
+        Find invalid activities
+        '''
+        query = """SELECT a.user_id, count(*) 
+                        FROM Activity a 
+                        JOIN TrackPoint t1 
+                        ON a.id = t1.activity_id 
+                        JOIN TrackPoint t2 
+                        ON t1.id = t2.id-1 
+                        AND t1.activity_id = t2.activity_id 
+                        WHERE t2.date_time > t1.date_time + INTERVAL 5 MINUTE
+                        AND t1.id != t2.id 
+                        GROUP BY a.user_id 
+                        ORDER BY a.user_id ASC"""
 
-def findInvalidActivities(self):
-    query = """SELECT a.user_id, count(*) 
-                    FROM Activity a 
-                    JOIN TrackPoint t1 
-                    ON a.id = t1.activity_id 
-                    JOIN TrackPoint t2 
-                    ON t1.id = t2.id-1 
-                    AND t1.activity_id = t2.activity_id 
-                    WHERE t2.date_time > t1.date_time + INTERVAL 5 MINUTE
-                    AND t1.id != t2.id 
-                    GROUP BY a.user_id 
-                    ORDER BY a.user_id ASC"""
-
-    self.cursor.execute(query)
-    rows = self.cursor.fetchall()
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        return rows
 
     def get_user_most_altitude(self) -> list[str]:
         """
@@ -388,7 +392,7 @@ def findInvalidActivities(self):
         """
         5. Find the top 10 users with most unique transportation modes
         """
-        query = """SELECT  RANK() OVER (
+        query = """SELECT RANK() OVER (
         ORDER BY COUNT(DISTINCT(transportation_mode)) DESC
         ) AS Top, user_id, COUNT(DISTINCT(transportation_mode)) as DifferentTransportation 
                     FROM Activity GROUP BY user_id ORDER BY DifferentTransportation DESC LIMIT 10;"""
