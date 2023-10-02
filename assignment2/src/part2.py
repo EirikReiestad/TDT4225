@@ -213,7 +213,7 @@ class Database:
         print("Find activities that are registered multiple times:\n", rows)
 
     def findCloseUsers(self):
-
+        '''Find close users'''
         # Using the formula to convert from lat/lon to meters
         # https://sciencing.com/convert-distances-degrees-meters-7858322.html
         # L = (2*pi*r*A)/360 Where L is the length, r is the radius of the earth, and A is the angle in degrees.
