@@ -1,4 +1,7 @@
 import datetime
+
+from haversine import haversine, Unit
+
 from DbConnector import DbConnector
 from tabulate import tabulate
 import numpy as np
@@ -123,13 +126,9 @@ class DbExecutor:
     # 8. Find the number of users which have been close to each other in time and space.
     # Close is defined as the same space (50 meters) and for the same half minute (30
     # seconds)
+    from haversine import haversine, Unit
     def findCloseUsers(self):
 
-
-        # Using the formula to convert from lat/lon to meters
-        # https://sciencing.com/convert-distances-degrees-meters-7858322.html
-        # L = (2*pi*r*A)/360 Where L is the length, r is the radius of the earth, and A is the angle in degrees.
-        # Came up with 0.00045 as the distance in lat/lon that is 50 meters
 
         # Sorting the trackpoints by date_time to make it fast to find the datepoints within 30 seconds
         query = """SELECT a.user_id, date_time, lat,lon FROM trackpoint t
@@ -155,10 +154,13 @@ class DbExecutor:
                 if rows[j][1] - rows[i][1] <= datetime.timedelta(seconds=30):
 
                     # Checking if the trackpoints are within 50 meters of each other
-                    if (rows[i][2] - rows[j][2])**2 + (rows[i][3] - rows[j][3])**2 < 0.00045**2:
+                    distance = haversine((rows[i][2], rows[i][3]), (rows[j][2], rows[j][3]), unit=Unit.METERS)
+
+                    if distance <= 50:
                         # Adding the users to the list
                         users.append(rows[i][0])
                         users.append(rows[j][0])
+
 
         # Removes duplicates
         users = np.unique(users)
