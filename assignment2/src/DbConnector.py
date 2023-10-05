@@ -23,10 +23,6 @@ class DbConnector:
         DATABASE="assignment2",
         USER="common",
         PASSWORD="common",
-        # HOST="localhost",
-        # DATABASE="assignment2",
-        # USER="root",
-        # PASSWORD="banhmi",
     ):
         # Connect to the database
         try:
