@@ -1,3 +1,4 @@
+# pylint: skip-file
 from pprint import pprint 
 from DbConnector import DbConnector
 

@@ -1,3 +1,4 @@
+# pylint: skip-file
 from pymongo import MongoClient, version
 
 
