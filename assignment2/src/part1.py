@@ -94,6 +94,7 @@ class ExampleProgram:
                             (user_id, transportation_mode, start_time, end_time)
                         )
 
+                print(user_id, len(values))
                 # Insert all labeled activites at once
                 activity_query = """
                 INSERT INTO Activity (user_id, transportation_mode, start_date_time, end_date_time) 
@@ -141,7 +142,8 @@ class ExampleProgram:
                         activity_id_query, (user_id, start_time, end_time)
                     )
                     activity_id = self.cursor.fetchall()
-
+                    print(user_id, file, activity_id)
+                    print((user_id, start_time, end_time))
                     # If there is no match, then this file of trackpoint is skipped
                     # Because user who saves transportation mode is not allowed
                     # To have transportation mode equals to NULL
