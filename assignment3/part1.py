@@ -42,6 +42,9 @@ class Assignement3:
         self.create_Activity()
         self.create_TrackPoint()
 
+        activity_id_counter = 0
+        trackpoint_id_counter = 0
+
         """Clean and insert data into table"""
         # Read from labeled_ids.txt the user who has labels
         user_label = []
@@ -74,8 +77,9 @@ class Assignement3:
                         end_time = line[1].replace("/", "-")
                         transportation_mode = line[2]
                         values.append(
-                            ({"user_id": userId,"transportation_mode": transportation_mode, "start_time": start_time, "end_time": end_time})
+                            ({"_id": activity_id_counter,"user_id": userId,"transportation_mode": transportation_mode, "start_time": start_time, "end_time": end_time})
                         )
+                        activity_id_counter += 1
 
                     # Insert all labeled activites at once
                     collection = self.db["Activity"]
@@ -87,15 +91,15 @@ class Assignement3:
                 activity_id = collection.find({"user_id": userId, "start_time": start_time, "end_time": end_time})
 
                 # Extracts the id from the result
-                activity_id = activity_id[0]["_id"]
+                #activity_id = activity_id[:]["_id"]
 
 
                 # If there is no match, then this file of trackpoint is skipped
                 # Because user who saves transportation mode is not allowed
                 # To have transportation mode equals to NULL
                 # Thus, we cannot add a new Activity row for it
-                if not activity_id:
-                    continue
+                #if not activity_id:
+                 #   continue
 
             else:
 
@@ -127,8 +131,10 @@ class Assignement3:
                 # If user saves transportation mode, delete the activity that this
                 # file belongs to as it will not have any trackpoints, thus is not relevant
                 if userId in user_label:
-                    collection = self.db["Activity"]
-                    collection.delete_many({"user_id": userId})
+
+                    for a in activity_id:
+                        collection = self.db["Activity"]
+                        collection.delete_one({"_id": a["_id"]})
 
                 # Thereafter, skip this file
                 continue
@@ -145,8 +151,8 @@ class Assignement3:
             else:
                 # If user does not save transportation, it means no activity has been added
                 # and therefore we add a new activity with transportation_mode = None (NULL)
-                activity_id = self.db["Activity"].insert_one({"user_id": userId, "transportation_mode": None, "start_date_time": start_time, "end_date_time": end_time}).inserted_id
-
+                activity_id = self.db["Activity"].insert_one({"_id": activity_id_counter,"user_id": userId, "transportation_mode": None, "start_date_time": start_time, "end_date_time": end_time}).inserted_id
+                activity_id_counter += 1
             values = []
             # Then process each line of the activity file, but skip the headers (first 6 lines)
             for line in lines[6:]:
@@ -157,8 +163,10 @@ class Assignement3:
                 date_days = line[4]
                 date_time = line[5] + " " + line[6]
                 values.append(
-                    ({"activity_id": activity_id, "lat": lat, "lon": lon, "altitude": altitude, "date_dats": date_days,"date_time": date_time})
+                    {"_id": trackpoint_id_counter, "activity_id": activity_id, "lat": lat, "lon": lon, "altitude": altitude, "date_dats": date_days,"date_time": date_time}
                 )
+
+                trackpoint_id_counter += 1
 
             # insert the trackpoints as a batch to be more efficient
             collection = self.db["TrackPoint"]
