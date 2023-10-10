@@ -1,9 +1,0 @@
-*/dataset
-*/Data
-
-.env
-
-# Ignore venv
-*/venv
-*/*/__pycache__
-*/.vscode
