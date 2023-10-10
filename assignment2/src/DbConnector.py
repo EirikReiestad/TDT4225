@@ -19,10 +19,10 @@ class DbConnector:
     # pylint: disable=C0103
     def __init__(
         self,
-        HOST="localhost",
+        HOST="tdt4225-35.idi.ntnu.no",
         DATABASE="assignment2",
-        USER="root",
-        PASSWORD="banhmi",
+        USER="common",
+        PASSWORD="common",
     ):
         # Connect to the database
         try:
