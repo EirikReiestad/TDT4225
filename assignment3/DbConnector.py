@@ -14,8 +14,8 @@ class DbConnector:
     """
 
     def __init__(self,
-                 DATABASE='assignment3',
-                 HOST="tdt4225-35.idi.ntnu.no",
+                 DATABASE="assignment3",
+                 HOST="localhost",
                  USER="common",
                  PASSWORD="common"):
         uri = "mongodb://%s:%s@%s/%s" % (USER, PASSWORD, HOST, DATABASE)
