@@ -7,3 +7,22 @@
 */venv
 */*/__pycache__
 */.vscode
+.idea/misc.xml
+.idea/modules.xml
+.idea/TDT4225.iml
+.idea/vcs.xml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/inspectionProfiles/Project_Default.xml
+assignment3/__pycache__/DbConnector.cpython-39.pyc
+assignment3/__pycache__/program.cpython-39.pyc
+
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+assignment3/__pycache__/DbConnector.cpython-39.pyc
+assignment3/__pycache__/program.cpython-39.pyc
